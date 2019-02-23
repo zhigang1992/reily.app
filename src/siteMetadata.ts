@@ -1,11 +1,11 @@
 export default {
   // The blog's title as it appears in the layout header, and in the document
   // <title> tag.
-  title: 'npx create-react-blog',
+  title: 'Reily app',
 
-  author: 'James K Nelson',
+  author: 'Kyle Fang',
   description:
-    "A clone of Dan Abramov's overreacted.io using create-react-app-mdx and Navi",
+    "Personal blog by Kyle Fang",
 
   // The number of posts to a page on the site index.
   indexPageSize: 10,
