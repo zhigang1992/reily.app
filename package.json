@@ -13,7 +13,6 @@
     "lodash": "4.17.11",
     "navi": "^0.11.4",
     "navi-scripts": "^0.11.3",
-    "netlify-cli": "2.6.0",
     "prismjs": "1.15.0",
     "react": "16.8.1",
     "react-dom": "16.8.1",
@@ -24,14 +23,16 @@
     "ts-node": "7.0.1",
     "typescript": "3.2.2"
   },
+  "devDependencies": {
+    "firebase-tools": "~6.4.0"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build && ts-node -O {\\\"module\\\":\\\"commonjs\\\"} node_modules/navi-scripts/bin/navi-scripts.js build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "serve": "navi-scripts serve",
-    "deploy": "netlify deploy --dir=build",
-    "deploy:prod": "netlify deploy --dir=build --prod"
+    "deploy": "firebase deploy --only hosting"
   },
   "eslintConfig": {
     "extends": "react-app"
