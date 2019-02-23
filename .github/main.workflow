@@ -5,7 +5,7 @@ workflow "Deploy" {
 
 action "Filter" {
   uses = "actions/bin/filter@master"
-  args = "branch develop"
+  args = "branch master"
 }
 
 action "Install" {
