@@ -1,53 +1,92 @@
+> Work in Progress
+
+<hr/>
+
 If one team works on both `react-native` client and backend api, we usually prefer to have both codebase in one repo. 
 
 Because this way, one pull request and have the complete code changes for one feature.
 
 This is sepecially the case with firebase as backend.
 
-## Yarn workspace
+## yarn workspace
 
-**To update this post,** edit `src/pages/posts/2019-01-05-welcome/document.mdx` and save to reload.
+To put them in same repo, easiest way is to put them in two separate folders:
 
-**To update the site's title,** edit the metadata in `src/siteMetadata.js`.
+- `/client`: the react native app 
+- `/firebase`: rest of the stuff
 
-**To your bio and photo,** edit the Bio component in `src/components/Bio.js`.
+We can do better with **yarn workspace**, [here is why.](https://yarnpkg.com/en/docs/workspaces#toc-why-would-you-want-to-do-this)
 
-<!--**To learn how to build your own JAMStack app**, join the [React In Practice](https://frontarm.com/courses/react-in-practice/) course by [James K Nelson](https://twitter.com/james_k_nelson), where you'll build this blog from scratch.-->
+```json
+{
+  "private": true,
+  "workspaces": {
+    "packages": [ "app", "functions", "web", "scripts" ]
+  }
+}  
+```
 
-**To change the site's colors,** edit the `:root` block in `src/index.module.css`.
+### react native's issue with mono workspace
 
-**To create a new post,** add a new directory to `src/pages/posts` that is prefixed with the new post's publication date, then create a `post.js` file inside it:
+- Unable to use `react-native link`
+- iOS lib hardcoded path, assume `node_modules` location relative to xcodeproject, and for android's `settings.gradle`
+- `react-native` instance finding jsBundle location.
+- `react-native` jest version is newer than `create-react-app`
 
-```jsx{3}
-export default {
-  title: `Learn How To Build This Blog From Scratch`,
-  tags: ['react', 'navi'],
-  spoiler: "An online course with loads of live demos and exercises.",
-  getContent: () => import('./document.mdx'),
+So, `nohoist` to the rescure. 
+
+```json{5}
+{
+  "name": "app",
+  "private": true,
+  "workspaces": {
+    "nohoist": [ "**" ]
+  },
 }
 ```
 
-**To set the maximum number of posts on an index page,**, set the `indexPageSize` property of the object exported by `src/siteMetadata.js`.
+## husky, lint-staged, prettier
 
-**To modify the generated HTML,** update the `src/renderPageToString.js` file.
+Now we only need to configure them once on workspace root `package.json`.
 
-**To add non-blog pages,** just use [`Navi.createPage()`](https://frontarm.com/navi/reference/declarations/#createpage), [`Navi.createSwitch()`](https://frontarm.com/navi/reference/declarations/#createswitch) and [`Navi.createRedirect()`](https://frontarm.com/navi/reference/declarations/#createredirect). For an example, check the about page at `src/pages/about/index.js`. If you create a page, remember to add it to the root switch at `src/pages/index.js`.
+```json
+{
+  "devDependencies": {
+    "husky": "^1.3.1",
+    "lint-staged": "^8.1.4",
+    "prettier": "^1.16.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "post-commit": "git update-index -g"
+    }
+  },
+  "lint-staged": {
+    "*.{js,json,md,ts,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
+```
 
-**To brush up on React's fundamentals,** check out the [React (without the buzzwords)](https://frontarm.com/courses/learn-raw-react/) and [Asynchronous JavaScript](https://frontarm.com/courses/async-javascript/) courses.
+## Share Configuration
 
+`tslint.json` and `tsconfig.json`
 
-##  The lowdown
+## Share UI modal
 
-This template is designed with a JAMstack architecture. This means that the blog is statically rendered for the fastest possible load time, but once loaded, it turns into a single page app -- ensuring navigation is silky smooth.
+if `web` were to be built with `react-native-web`, then we can have another workspace `common`.
 
-It follows a convention-over-configuation philosophy. It should work out of the box with minimal effort for most people's needs, but can also be configured where required.
+We can build UI and then import it from both `app` and `web`.
 
-Finally, an effort has been made to prefer explicit code over concise code, and simplicity over complexity. Magic is avoided wherever possible, even if this means more code is required for the desired result.
+> Be careful about putting none UI components in `common`, might cost a lot of effort to get firebase working with the same codebase.
 
+## Scripts
 
-## The tools
+- [meow](https://github.com/sindresorhus/meow) CLI app helper
+- [chalk](https://github.com/chalk/chalk) Terminal string styling done right
+- [ora](https://github.com/sindresorhus/ora) Elegant terminal spinner
+- [ts-node](https://github.com/TypeStrong/ts-node) TypeScript execution and REPL for node.js
 
-- [React](https://reactjs.org) renders the UI
-- [MDX](https://mdxjs.com) converts markdown into React components
-- [Navi](https://frontarm.com/navi/) handles routing and creates static HTML files for each route
-- [create-react-app](https://reactjs.org/docs/create-a-new-react-app.html) builds the app's assets and provides the dev server
