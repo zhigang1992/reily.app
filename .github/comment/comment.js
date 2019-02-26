@@ -1,6 +1,6 @@
-import * as process from 'process';
-import * as fs from 'fs';
-import fetch from 'node-fetch';
+const process = require('process');
+const fs = require('fs');
+const fetch = require('node-fetch');
 
 const event = JSON.parse(
     fs.readFileSync(process.env.GITHUB_EVENT_PATH, {
