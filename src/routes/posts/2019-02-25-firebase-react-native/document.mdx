@@ -1,12 +1,13 @@
-If one team works on both `react-native` client and backend api, we usually prefer to have both codebase in one repo. 
+If one team works on both `react-native` client and backend api, 
+we usually prefer to have both codebase in one repo. 
 
-Because this way, one pull request and have the complete code changes for one feature.
+This way, one pull request and have the complete code changes for one feature.
 
 This is sepecially the case with firebase as backend.
 
 ## yarn workspace
 
-To put them in same repo, easiest way is to put them in two separate folders:
+To put them in same repo, easiest way is to put them in two separate, isolated folders:
 
 - `/client`: the react native app 
 - `/firebase`: rest of the stuff
@@ -22,10 +23,24 @@ But we can do better with **yarn workspace**, [here is why.](https://yarnpkg.com
 }  
 ```
 
-### react native's issue with mono workspace
+Unfortunately, `react-native` does not work well with mono workspace out of the box.    
+There are following issues:
 
-- Unable to use `react-native link`
-- iOS lib hardcoded path, assume `node_modules` location relative to xcodeproject, and for android's `settings.gradle`
+####  Unable to use `react-native link`
+
+Currently `react-native link` would look for packages in `/app/node_modules` and fail,
+because it's actually in `/node_modules`
+
+#### Native library search path
+
+Most iOS lib for `react-native` hardcoded Header/Framework search paths,
+which assumes `node_modules` is located at `app/node_modules`. 
+For example, all these lib need to reference to `React`s header file to be able to compile.
+
+And for android's `settings.gradle`, 
+
+#### jsBundle location
+
 - `react-native` instance finding jsBundle location.
 - `react-native` jest version is newer than `create-react-app`
 
