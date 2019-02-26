@@ -27,7 +27,7 @@ const options = {
   path: `/repos/${GITHUB_REPOSITORY}/issues/${event.number}/comments`,
   method: "POST",
   headers: {
-    'User-Agent': 'nodejs',
+    'User-Agent': 'curl',
     Authorization: `token ${GITHUB_TOKEN}`,
     Accept:
       "application/vnd.github.v3+json; application/vnd.github.antiope-preview+json"
