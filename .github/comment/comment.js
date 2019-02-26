@@ -47,5 +47,5 @@ req.on("error", error => {
     process.exit(1);
 });
 
-req.write(`Will be deployed to [${surge}](${surge}), check it out!`);
+req.write(JSON.stringify({body: `Will be deployed to [${surge}](${surge}), check it out!`}));
 req.end();
