@@ -1,15 +1,15 @@
-workflow "Deploy Firebase" {
+workflow "Deploy master to firebase" {
   on = "push"
-  resolves = ["Deploy Firebase"]
+  resolves = ["Deploy firebase"]
 }
 
-action "Filter Master" {
+action "Filter master" {
   uses = "actions/bin/filter@master"
   args = "branch master"
 }
 
-action "Deploy Firebase" {
-  needs = ["Filter Master"]
+action "Deploy firebase" {
+  needs = ["Filter master"]
   uses = "./.github/deploy"
   args = "deploy:firebase"
   secrets = [
@@ -17,18 +17,18 @@ action "Deploy Firebase" {
   ]
 }
 
-workflow "Deploy Surge" {
+workflow "Deploy none master to surge" {
   on = "push"
-  resolves = ["Deploy Surge"]
+  resolves = ["Deploy surge"]
 }
 
-action "Filter None Master" {
+action "Filter none master" {
   uses = "actions/bin/filter@master"
   args = "not branch master"
 }
 
-action "Deploy Surge" {
-  needs = ["Filter None Master"]
+action "Deploy surge" {
+  needs = ["Filter none master"]
   uses = "./.github/deploy"
   args = "deploy:surge"
   secrets = [
