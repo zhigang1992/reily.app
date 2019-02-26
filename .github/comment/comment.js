@@ -9,6 +9,7 @@ const event = JSON.parse(
 );
 
 if (event.action !== "opened") {
+  console.log('Event:' + event.action)
   process.exit(78);
 }
 
