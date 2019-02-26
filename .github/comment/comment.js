@@ -8,10 +8,10 @@ const event = JSON.parse(
   })
 );
 
-if (event.action !== "opened") {
-  console.log('Event:' + event.action)
-  process.exit(78);
-}
+// if (event.action !== "opened") {
+//   console.log('Event:' + event.action)
+//   process.exit(78);
+// }
 
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
