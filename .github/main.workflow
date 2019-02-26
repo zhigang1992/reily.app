@@ -1,6 +1,6 @@
-workflow "Deploy" {
+workflow "Deploy Firebase" {
   on = "push"
-  resolves = ["Deploy Firebase", "Deploy Surge"]
+  resolves = ["Deploy Firebase"]
 }
 
 action "Filter Master" {
@@ -15,6 +15,11 @@ action "Deploy Firebase" {
   secrets = [
     "FIREBASE_TOKEN",
   ]
+}
+
+workflow "Deploy Surge" {
+  on = "push"
+  resolves = ["Deploy Surge"]
 }
 
 action "Filter None Master" {
