@@ -36,3 +36,15 @@ action "Deploy surge" {
     "SURGE_TOKEN"
   ]
 }
+
+workflow "Post comment for surge on PR open" {
+  on = "pull_request"
+  resolves = ["Post comment"]
+}
+
+action "Post comment" {
+  uses = "./.github/comment"
+  secrets = [
+    "GITHUB_TOKEN"
+  ]
+}
