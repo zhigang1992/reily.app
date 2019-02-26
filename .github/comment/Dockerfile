@@ -8,4 +8,3 @@ LABEL "com.github.actions.color"="purple"
 COPY "entrypoint.sh" "/entrypoint.sh"
 COPY "comment.js" "/comment.js"
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["help"]
