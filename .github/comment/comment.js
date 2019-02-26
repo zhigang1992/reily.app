@@ -8,10 +8,10 @@ const event = JSON.parse(
   })
 );
 
-// if (event.action !== "opened") {
-//   console.log('Event:' + event.action)
-//   process.exit(78);
-// }
+if (event.action !== "opened") {
+  console.log('Event:' + event.action)
+  process.exit(78);
+}
 
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -40,6 +40,10 @@ const req = https.request(options, res => {
   res.on("data", d => {
     process.stdout.write(d);
   });
+
+  if (res.statusCode >= 400) {
+    process.exit(1);
+  }
 });
 
 req.on("error", error => {
@@ -47,5 +51,5 @@ req.on("error", error => {
     process.exit(1);
 });
 
-req.write(JSON.stringify({body: `Will be deployed to [${surge}](${surge}), check it out!`}));
+req.write(JSON.stringify({body: `Preview this PR at [${surge}](${surge}), check it out!`}));
 req.end();
