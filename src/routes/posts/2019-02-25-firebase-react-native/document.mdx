@@ -2,7 +2,7 @@ If one team works on both `react-native` client and backend api, we usually pref
 
 Because this way, one pull request and have the complete code changes for one feature.
 
-This is sepecially the case with firebase as backend.
+This is especially the case with firebase as backend.
 
 ## yarn workspace
 
@@ -25,11 +25,11 @@ But we can do better with **yarn workspace**, [here is why.](https://yarnpkg.com
 ### react native's issue with mono workspace
 
 - Unable to use `react-native link`
-- iOS lib hardcoded path, assume `node_modules` location relative to xcodeproject, and for android's `settings.gradle`
+- iOS lib hardcoded path, assume `node_modules` location relative to `xcodeproject`, and for android's `settings.gradle`
 - `react-native` instance finding jsBundle location.
 - `react-native` jest version is newer than `create-react-app`
 
-So, `nohoist` to the rescure. 
+So, `nohoist` to the rescue. 
 
 ```json{5}
 {
