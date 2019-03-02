@@ -1,5 +1,5 @@
-If one team works on both `react-native` client and backend api, 
-we usually prefer to have both codebase in one repo. 
+If one team works on both `react-native` client and backend API, 
+we usually prefer to have both codebases in one repo. 
 
 This way, one pull request and have the complete code changes for one feature.
 
@@ -7,7 +7,7 @@ This is especially the case with firebase as backend.
 
 ## yarn workspace
 
-To put them in same repo, easiest way is to put them in two separate, isolated folders:
+To put them in the same repo, the easiest way is to put them in two separate, isolated folders:
 
 - `/client`: the react native app 
 - `/firebase`: rest of the stuff
@@ -24,7 +24,7 @@ But we can do better with **yarn workspace**, [here is why.](https://yarnpkg.com
 ```
 
 Unfortunately, `react-native` does not work well with mono workspace out of the box.    
-There are following issues:
+There are the following issues:
 
 ####  Unable to use `react-native link`
 
@@ -42,7 +42,7 @@ For example, in [react-native-firebase](https://github.com/invertase/react-nativ
 
 It assumes `node_modules` is located at `app/node_modules`, the same folder where `.xcodeproject` is. So obviously it will not able be to found these frameworks.
 
-Samething goes for header file search paths.
+Same thing goes for header file search paths.
 
 To fix this only issue, you can:
 
@@ -50,14 +50,14 @@ To fix this only issue, you can:
 1. `nohoist` all native packages. (We will talk more about `nohoist` in just a bit).
 1. Create a system file link, from `app/ios` to `ios`.
 
-This issue does not apply to android, but on android, you still need to adjust the path you import in `settings.gradle` 
+This issue does not apply to android, but on Android, you still need to adjust the path you import in `settings.gradle` 
 
 #### jsBundle location
 
 `react-native` wasn't built to customize jsBundle location, which is why [@brunolemos](https://twitter.com/brunolemos) created [this patch on iOS](https://github.com/devhubapp/devhub/blob/cf8f287d160ae863b5b0415aea6d9be5ee5e6dc9/patches/react-native%2B0.57.4.patch) and [this patch on android](https://github.com/devhubapp/devhub/commit/c51ec020ce6858010513c294148d9fd5d8b0373e) for [devhub](https://devhubapp.com).
 
 
-These issues are hard to fix and also really hacky, and when `react-native` upgrades, they might break and require manual upgrade.
+These issues are hard to fix and also really hacky, and when `react-native` upgrades, they might break and require a manual upgrade.
 
 So, `nohoist` to the rescue. 
 
@@ -100,7 +100,7 @@ For one, now we only need to configure `husky, lint-staged, prettier` only once 
 }
 ```
 
-It will keep all the code linted and pretty formatted, and more importantly consistance between all the sub-projects
+It will keep all the code lint and pretty formatted, and more importantly consistent between all the sub-projects
 
 ## Share Configuration
 
@@ -129,7 +129,7 @@ We can build UI and then import it from both `app` and `web`.
 ## Scripts
 
 The scripts subproject is meant for project house cleaning,
-for example, we might need a script to add admin privelege to a certain user.
+for example, we might need a script to add admin privileges to a certain user.
 And we can keep the script around for later use or references.
 
 Here are some of the really useful tools to help you with this task:
