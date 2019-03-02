@@ -29,20 +29,35 @@ There are following issues:
 ####  Unable to use `react-native link`
 
 Currently `react-native link` would look for packages in `/app/node_modules` and fail,
-because it's actually in `/node_modules`
+because it's actually in `/node_modules`.
+Thus we can only do manual integrations.
 
 #### Native library search path
 
 Most iOS lib for `react-native` hardcoded Header/Framework search paths,
-which assumes `node_modules` is located at `app/node_modules`. 
-For example, all these lib need to reference to `React`s header file to be able to compile.
 
-And for android's `settings.gradle`, 
+For example, in [react-native-firebase](https://github.com/invertase/react-native-firebase), search path look like following
+
+<img width="100%" style={{borderRadius:10, marginBottom: 10}} src={require('./react-native-firebase.jpg')} alt="React Native Firebase Search Path" />
+
+It assumes `node_modules` is located at `app/node_modules`, the same folder where `.xcodeproject` is. So obviously it will not able be to found these frameworks.
+
+Samething goes for header file search paths.
+
+To fix this only issue, you can:
+
+1. [patch-package](https://github.com/ds300/patch-package) all the native packages' search path.
+1. `nohoist` all native packages. (We will talk more about `nohoist` in just a bit).
+1. Create a system file link, from `app/ios` to `ios`.
+
+This issue does not apply to android, but on android, you still need to adjust the path you import in `settings.gradle` 
 
 #### jsBundle location
 
-- `react-native` instance finding jsBundle location.
-- `react-native` jest version is newer than `create-react-app`
+`react-native` wasn't built to customize jsBundle location, which is why [@brunolemos](https://twitter.com/brunolemos) created [this patch on iOS](https://github.com/devhubapp/devhub/blob/cf8f287d160ae863b5b0415aea6d9be5ee5e6dc9/patches/react-native%2B0.57.4.patch) and [this patch on android](https://github.com/devhubapp/devhub/commit/c51ec020ce6858010513c294148d9fd5d8b0373e) for [devhub](https://devhubapp.com).
+
+
+These issues are hard to fix and also really hacky, and when `react-native` upgrades, they might break and require manual upgrade.
 
 So, `nohoist` to the rescue. 
 
@@ -56,9 +71,12 @@ So, `nohoist` to the rescue.
 }
 ```
 
+[Read more](https://yarnpkg.com/blog/2018/02/15/nohoist/)
+
 ## husky, lint-staged, prettier
 
-Now we only need to configure them once on workspace root `package.json`.
+We yarn workspace, it also bring lots of benefits. 
+For one, now we only need to configure `husky, lint-staged, prettier` only once on workspace root.
 
 ```json
 {
@@ -82,9 +100,25 @@ Now we only need to configure them once on workspace root `package.json`.
 }
 ```
 
+It will keep all the code linted and pretty formatted, and more importantly consistance between all the sub-projects
+
 ## Share Configuration
 
-`tslint.json` and `tsconfig.json`
+Just like `husky, lint-staged, prettier` we can unify `tslint.json` and `tsconfig.json`.
+
+We can have share/common setting in the project root, and then in each subproject.
+
+```json{1}
+{
+  "extends": "../../tsconfig.json",
+  ...
+}
+
+```json{1}
+{
+  "extends": ["../../tslint.json"]
+}
+```
 
 ## Share UI modal
 
@@ -92,12 +126,15 @@ if `web` were to be built with `react-native-web`, then we can have another work
 
 We can build UI and then import it from both `app` and `web`.
 
-> Be careful about putting none UI components in `common`, might cost a lot of effort to get firebase working with the same codebase.
-
 ## Scripts
+
+The scripts subproject is meant for project house cleaning,
+for example, we might need a script to add admin privelege to a certain user.
+And we can keep the script around for later use or references.
+
+Here are some of the really useful tools to help you with this task:
 
 - [meow](https://github.com/sindresorhus/meow) CLI app helper
 - [chalk](https://github.com/chalk/chalk) Terminal string styling done right
 - [ora](https://github.com/sindresorhus/ora) Elegant terminal spinner
 - [ts-node](https://github.com/TypeStrong/ts-node) TypeScript execution and REPL for node.js
-
