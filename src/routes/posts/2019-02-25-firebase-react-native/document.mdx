@@ -108,14 +108,14 @@ Just like `husky, lint-staged, prettier` we can unify `tslint.json` and `tsconfi
 
 We can have share/common setting in the project root, and then in each subproject.
 
-```json{1}
+```json{2}
 {
   "extends": "../../tsconfig.json",
   ...
 }
 ```
 
-```json{1}
+```json{2}
 {
   "extends": ["../../tslint.json"],
   ...
