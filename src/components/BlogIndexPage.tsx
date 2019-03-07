@@ -1,24 +1,24 @@
-import { Route } from 'navi'
-import React from 'react'
-import { Link } from 'react-navi'
-import siteMetadata from '../siteMetadata'
-import ArticleSummary from './ArticleSummary'
-import Bio from './Bio'
-import Pagination from './Pagination'
-import styles from './BlogIndexPage.module.css'
+import { Route } from "navi";
+import React from "react";
+import { Link } from "react-navi";
+import siteMetadata from "../siteMetadata";
+import ArticleSummary from "./ArticleSummary";
+import Bio from "./Bio";
+import Pagination from "./Pagination";
+import styles from "./BlogIndexPage.module.css";
 
 interface BlogIndexPageProps {
-  blogRoot: string
-  pageCount: number
-  pageNumber: number
-  postRoutes: Route[]
+  blogRoot: string;
+  pageCount: number;
+  pageNumber: number;
+  postRoutes: Route[];
 }
 
 function BlogIndexPage({
   blogRoot: blogRoot,
   pageCount,
   pageNumber,
-  postRoutes,
+  postRoutes
 }: BlogIndexPageProps) {
   return (
     <div>
@@ -44,15 +44,18 @@ function BlogIndexPage({
       )}
       <footer className={styles.footer}>
         <div>
-          <a href="./rss.xml" target="_blank" style={{ float: 'right' }}>
+          <a href="./rss.xml" target="_blank" style={{ float: "right" }}>
             RSS
           </a>
-          <Link href="./about">About</Link> &bull;{' '}
-          <Link href="./tags">Tags</Link>
+          <Link href="./about">About</Link> &bull;{" "}
+          <Link href="./tags">Tags</Link> &bull;{" "}
+          <a href="https://github.com/zhigang1992/reily.app" target="_blank">
+            Source
+          </a>
         </div>
       </footer>
     </div>
-  )
+  );
 }
 
-export default BlogIndexPage
+export default BlogIndexPage;
