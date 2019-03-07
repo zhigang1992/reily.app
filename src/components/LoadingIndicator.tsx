@@ -1,10 +1,10 @@
-import React from 'react'
-import styles from './LoadingIndicator.module.css'
+import React from "react";
+import styles from "./LoadingIndicator.module.css";
 
 interface LoadingIndicatorProps {
-  active?: boolean
-  className?: string
-  style?: React.CSSProperties
+  active?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 function LoadingIndicator({ active, className, style }: LoadingIndicatorProps) {
@@ -12,12 +12,12 @@ function LoadingIndicator({ active, className, style }: LoadingIndicatorProps) {
     <div
       className={`
         ${styles.LoadingIndicator}
-        ${active ? styles.active : ''}
+        ${active ? styles.active : ""}
         ${className}
       `}
       style={style}
     />
-  )
+  );
 }
 
-export default LoadingIndicator
+export default LoadingIndicator;

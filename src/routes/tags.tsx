@@ -1,75 +1,77 @@
-import React from 'react'
-import { compose, mount, route, withContext, Route } from 'navi'
-import { join } from 'path'
-import { fromPairs } from 'lodash'
-import TagIndexPage from '../components/TagIndexPage'
-import TagPage from '../components/TagPage'
-import getTagsFromSiteMap from '../utils/getTagsFromSiteMap'
+import React from "react";
+import { compose, mount, route, withContext, Route } from "navi";
+import { join } from "path";
+import { fromPairs } from "lodash";
+import TagIndexPage from "../components/TagIndexPage";
+import TagPage from "../components/TagPage";
+import getTagsFromSiteMap from "../utils/getTagsFromSiteMap";
 
 interface TagsNavContext {
-  blogRoot: string
-  tagsRoot: string
+  blogRoot: string;
+  tagsRoot: string;
 }
 
 const tagRoutes = compose(
-  withContext((req, context): TagsNavContext => ({
-    ...context,
-    tagsRoot: req.mountpath,
-  })),
+  withContext(
+    (req, context): TagsNavContext => ({
+      ...context,
+      tagsRoot: req.mountpath
+    })
+  ),
   mount({
-    '/': route({
-      title: 'Tags',
+    "/": route({
+      title: "Tags",
 
       getView: async req => {
         // Build a list of pages for each tag
-        let tagsPathname = req.mountpath.replace(/\/$/, '')
-        let siteMap = await req.router.resolveSiteMap('/', {
+        let tagsPathname = req.mountpath.replace(/\/$/, "");
+        let siteMap = await req.router.resolveSiteMap("/", {
           predicate: segment =>
-            segment.url.pathname.indexOf(tagsPathname) === -1,
-        })
-        let tags = getTagsFromSiteMap(siteMap)
-        let tagRoutes = fromPairs(tags.map(name => [name.toLowerCase(), []]))
+            segment.url.pathname.indexOf(tagsPathname) === -1
+        });
+        let tags = getTagsFromSiteMap(siteMap);
+        let tagRoutes = fromPairs(tags.map(name => [name.toLowerCase(), []]));
         Object.values(siteMap.routes).forEach((route: Route) => {
-          let data = route.data
+          let data = route.data;
           if (data && data.tags) {
             data.tags.forEach(tag => {
-              tag = tag.toLowerCase()
+              tag = tag.toLowerCase();
               if (tagRoutes[tag]) {
-                tagRoutes[tag].push(route)
+                tagRoutes[tag].push(route);
               }
-            })
+            });
           }
-        })
+        });
 
         return (
           <TagIndexPage
             tags={tags.map(name => ({
               name,
               href: join(req.mountpath, name.toLowerCase()),
-              count: (tagRoutes[name] || []).length,
+              count: (tagRoutes[name] || []).length
             }))}
           />
-        )
-      },
+        );
+      }
     }),
 
-    '/:tag': route({
+    "/:tag": route({
       getTitle: req => req.params.tag,
       getView: async (req, context: TagsNavContext) => {
-        let lowerCaseTag = req.params.tag.toLowerCase()
+        let lowerCaseTag = req.params.tag.toLowerCase();
 
         // Build a list of pages that include the tag from the site map
         let siteMap = await req.router.resolveSiteMap(context.blogRoot, {
           predicate: segment =>
-            segment.url.pathname.indexOf(context.tagsRoot) === -1,
-        })
-        let routes = [] as Route[]
+            segment.url.pathname.indexOf(context.tagsRoot) === -1
+        });
+        let routes = [] as Route[];
         Object.values(siteMap.routes).forEach((route: Route) => {
-          let tags = (route.data && route.data.tags) || []
+          let tags = (route.data && route.data.tags) || [];
           if (tags.find(metaTag => metaTag.toLowerCase() === lowerCaseTag)) {
-            routes.push(route)
+            routes.push(route);
           }
-        })
+        });
 
         return (
           <TagPage
@@ -77,10 +79,10 @@ const tagRoutes = compose(
             name={req.params.tag}
             routes={routes}
           />
-        )
-      },
-    }),
+        );
+      }
+    })
   })
-)
+);
 
-export default tagRoutes
+export default tagRoutes;
