@@ -40,6 +40,18 @@ function BlogPostLayout({ blogRoot }: BlogPostLayoutProps) {
           >
             <MDXComponent />
           </MDXProvider>
+          <a
+            className={styles.EditOnGithub}
+            href={
+              "https://github.com/zhigang1992/reily.app/blob/master/src/routes/posts/" +
+              data.pathname
+                .replace(/^.\//, "")
+                .replace(/post\.ts$/, "document.mdx")
+            }
+            target="_blank"
+          >
+            Edit on GitHub
+          </a>
           <footer className={styles.footer}>
             <h3 className={styles.title}>
               <Link href={blogRoot}>{siteMetadata.title}</Link>

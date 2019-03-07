@@ -20,6 +20,10 @@
   color: black;
 }
 
+.EditOnGithub {
+  text-decoration: none;
+}
+
 .footer {
   margin-top: 7rem;
 }
