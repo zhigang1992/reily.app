@@ -1,15 +1,15 @@
-import React from 'react'
-import { Link } from 'react-navi'
-import styles from './TagIndexPage.module.css'
+import React from "react";
+import { Link } from "react-navi";
+import styles from "./TagIndexPage.module.css";
 
 interface Tag {
-  count: number
-  href: string
-  name: string
+  count: number;
+  href: string;
+  name: string;
 }
 
 interface TagIndexPage {
-  tags: Tag[]
+  tags: Tag[];
 }
 
 function TagIndexPage({ tags }: TagIndexPage) {
@@ -26,7 +26,7 @@ function TagIndexPage({ tags }: TagIndexPage) {
         ))}
       </ul>
     </div>
-  )
+  );
 }
 
-export default TagIndexPage
+export default TagIndexPage;

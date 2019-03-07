@@ -1,18 +1,13 @@
-import React from 'react'
-import {
-  NavContent,
-  Link,
-  NavLoading,
-  NotFoundBoundary,
-} from 'react-navi'
-import siteMetadata from '../siteMetadata'
-import NotFoundPage from './NotFoundPage'
-import LoadingIndicator from './LoadingIndicator'
-import styles from './BlogLayout.module.css'
+import React from "react";
+import { NavContent, Link, NavLoading, NotFoundBoundary } from "react-navi";
+import siteMetadata from "../siteMetadata";
+import NotFoundPage from "./NotFoundPage";
+import LoadingIndicator from "./LoadingIndicator";
+import styles from "./BlogLayout.module.css";
 
 interface BlogLayoutProps {
-  blogRoot: string
-  isViewingIndex: boolean
+  blogRoot: string;
+  isViewingIndex: boolean;
 }
 
 function BlogLayout({ blogRoot, isViewingIndex }: BlogLayoutProps) {
@@ -42,7 +37,7 @@ function BlogLayout({ blogRoot, isViewingIndex }: BlogLayoutProps) {
         </div>
       )}
     </NavLoading>
-  )
+  );
 }
 
-export default BlogLayout
+export default BlogLayout;
