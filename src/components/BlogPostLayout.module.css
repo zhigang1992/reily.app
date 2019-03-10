@@ -63,7 +63,7 @@
 .content h6 {
   font-weight: 900;
   line-height: 1.1;
-  margin-top: 3.5rem;
+  margin-top: 2.5rem;
   text-rendering: optimizeLegibility;
 }
 
@@ -124,6 +124,10 @@
 }
 .content a > code {
   color: var(--primary-color);
+}
+
+.content table {
+  margin-bottom: 1em;
 }
 
 .content :global(.highlighted-line) {
