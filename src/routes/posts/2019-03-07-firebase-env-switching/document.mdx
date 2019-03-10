@@ -74,7 +74,15 @@ firebase functions:config:clone --from dev
 
 ## Native app
 
-For iOS there is `GoogleService-Info.plist` and `Info.plist`, for android there is `google-services.json`.
+For iOS:
+
+- there is `GoogleService-Info.plist`
+- and `Info.plist` to use the `REVERSED_CLIENT_ID` from `GoogleService-Info.plist` 
+
+For android:
+
+- there is `google-services.json`.
+- (Optional) `build.gradle` or `gradle.property`. 
 
 We have some options on how we can approach multiple envs setup.
 
@@ -124,12 +132,82 @@ And for file swapping, we have [this](https://gist.github.com/zhigang1992/6e28de
 Essentially, it does this:
 
 ```typescript
-
+await run(`../node_modules/.bin/firebase use ${env}`);
+await run(
+`ln -f ./configs/${env}/GoogleService-Info.plist ../app/ios/GoogleService-Info.plist`
+);
+await run(
+`ln -f ./configs/${env}/google-services.json ../app/android/app/google-services.json`
+);
+await run(
+`ln -f ./configs/${env}/Info.plist ../app/ios/mercy/Info.plist`
+);
 ```
 
+The reason why we use `ln` instead of `copy` because it will sync back changes from Xcode or Android Studio.
 
 ## Website (With firebase Hosting)
 
+When setup Web project for firebase, we usually got this from firebase
+
+```html
+<script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyD9N6fIvtG-wnjjtGGmaGgBMA56te6kiok",
+    authDomain: "mercy-b94dd.firebaseapp.com",
+    databaseURL: "https://mercy-b94dd.firebaseio.com",
+    projectId: "mercy-b94dd",
+    storageBucket: "mercy-b94dd.appspot.com",
+    messagingSenderId: "771295960232"
+  };
+  firebase.initializeApp(config);
+</script>
+```
+
+But it became a problem when we use different configs on different envs.
+
+Fortunately, firebase provide [reserved urls](https://firebase.google.com/docs/hosting/reserved-urls#sdk_auto-configuration)
+
+```html
+<script src="/__/firebase/init.js"></script>
+```
+
+or 
+
+```js
+fetch('/__/firebase/init.json').then(response => {
+  firebase.initializeApp(response.json());
+});
+```
+
+Then for local development with create-react-app, we use [proxy](https://facebook.github.io/create-react-app/docs/proxying-api-requests-in-development)
+
+```json{3}
+{
+  ...
+  "proxy": "http://mercy-dev.firebaseapp.com",
+  ...
+}
+```
+
 ## Firebase Admin Scripts
 
-## Deployment
+Through a project's lifecycle, we often need a lot of scripts to certain work.
+
+For example, promoting admin, migrate database, calculating stats.
+
+If we have multiple env, this becoming harder to maintain.
+
+[Here is code](https://gist.github.com/zhigang1992/88dfa42117c9d12b5689e26451a58223)
+
+```typescript{2}
+export const currentEnv = (): Env => {
+  return process.env.DEPOLY_TO || projectsMap[execSync(`firebase use`).trim()]
+};
+```
+
+This way, it will use whatever we chose before with `firebase use` by default.
+But we still can do `DEPLOY_TO=prod ./scriptA.ts` to overwrite this behavior.
+
