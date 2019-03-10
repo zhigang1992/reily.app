@@ -1,5 +1,20 @@
 ## Why do we need multiple envs
 
+To avoid surprises and unintentional changes on production server.
+
+In general, there are 3 envs:
+
+- **Development**: Deploy cloud functions during development.
+- **Staging**: Replica of a production environment for software testing.
+- **Production**: Production server!
+
+Here is how we use these envs in our development flow 
+
+- Staring working on a new feature, deploy to development server as needed to test cloud functions on env. 
+- Then after we complete the feature, we created a PR on GitHub. 
+- And when the PR and reviewed and accepted, code will be automatically deploy to Staging env. 
+- Then after it's tested on Staging server, we create a Release on GitHub which triggers GitHub action and deploy to Production.
+
 ### Why do we need multiple firebase project
 
 # How
