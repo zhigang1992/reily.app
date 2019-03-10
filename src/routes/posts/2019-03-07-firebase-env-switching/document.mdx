@@ -17,15 +17,116 @@ Here is how we use these envs in our development flow
 
 ### Why do we need multiple firebase project
 
+Firebase projects actually do support multiple apps, but the support is not complete.
+
+| Service | Multiple Instance Support |
+|:----|----:|
+|Realtime database| Supported |
+|Storage| Supported |
+|Hosting| Supported |
+|Authentication| Not Supported |
+|FireStore| Not Supported |
+|Cloud Function| Not Supported |
+|Analytics| Not Supported |
+|...| Not Supported |
+
+Most features/services does not support multiple instance, even for ones that do, which env is hard and error prone.
+
+And fortunately, [firebase-tools](https://github.com/firebase/firebase-tools) does support multiple firebase projects via `firebase use`.
+
 # How
+
+## Setup
+
+- Create Dev project in console.firebase.google.com
+- Enable appropriate services in console (e.g. FireStore, Storage, Functions, Hosting. It need to be enabled first before deploy.)
+- Setup local folder with `firebase init`
+- Create projects for other envs
+- Enable appropriate services in console for other envs (Unfortunately, we can automate this process yet).
+- Add to local folder with `firebase use --add`
+- Deploy to these envs.
 
 ## Cloud Functions
 
-Cloud functions has it covered on its own, but it might need different env variable.
+Cloud functions has env setup covered on its own, so you don't need to worry about it in your code.
+ 
+But it might need different env variable.
 
-e.g. stripe integration.
+For example, when integrating with stripe, we usually use test toke for (dev, optionally staging).
+
+Which we can use https://firebase.google.com/docs/functions/config-env
+
+```bash
+firebase use dev
+firebase functions:config:set strip.key="THE TEST KEY"
+firebase use staging
+firebase functions:config:set strip.key="THE PRODUCTION KEY"
+firebase use production
+firebase functions:config:set strip.key="THE PRODUCTION KEY"
+``` 
+
+For other identical envs, you can use clone
+
+```bash
+firebase use staging
+firebase functions:config:clone --from dev
+```
 
 ## Native app
+
+For iOS there is `GoogleService-Info.plist` and `Info.plist`, for android there is `google-services.json`.
+
+We have some options on how we can approach multiple envs setup.
+
+#### Using multiple targets for iOS
+
+Duplicate `app` target to create `app-staging` and `app-production`, then add there corresponding to their target.
+
+This approach does not require any file swapping, but multiple targets introduces other problems:
+
+1. `react-native link` will only link with the first target. And with manually linking we often forget staging and prod.
+1. Native code will need to be added to all the targets, even though with react-native we hardly need to write any native code.
+
+#### Using different Bundle ID
+
+If we use different bundle id for different envs. We can install multiple apps at one device, and not having to worry about they interfering with each other.
+
+But it also require us to config and provisioning them separately.
+
+<hr/>
+
+So in our projects we usually use the same bundle ID with one target for iOS app, and swap out these files. 
+
+Which will require following code in `AppDelegate`:
+
+```swift
+let projectKey = "com.mercy.projectKey"
+let savedProjectID = UserDefaults.standard.string(forKey: projectKey)
+
+let projectID = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist")
+    .flatMap({ NSDictionary(contentsOfFile:$0) })
+    .flatMap({ $0["PROJECT_ID"] as? String})
+
+if savedProjectID != projectID {
+    try? Auth.auth().signOut()
+    UserDefaults.standard.set(projectID, forKey: projectKey)
+    UserDefaults.standard.synchronize()
+}
+```
+
+Above code check for two cases:
+
+1. Switch firebase env, we would signOut user because they are on different backend.
+1. firebase persist auth info in keychain, which will remain after app remove and reinstall. For us this is a feature that we do not want. So since `com.mercy.projectKey` is saved in `NSUserDefaults`, it will log us out when reinstall.
+
+And for file swapping, we have [this](https://gist.github.com/zhigang1992/6e28de154cd8104ef08b9264d4364ee4)
+
+Essentially, it does this:
+
+```typescript
+
+```
+
 
 ## Website (With firebase Hosting)
 
