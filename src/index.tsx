@@ -7,6 +7,9 @@ import "./index.module.css";
 import routes from "./routes";
 import * as serviceWorker from "./serviceWorker";
 
+import ReactGA from "react-ga";
+ReactGA.initialize("UA-136015467-1");
+
 // `register()` is responsible for exporting your app's pages and App
 // component to the static renderer, and for starting the app with the
 // `main()` function when running within a browser.
