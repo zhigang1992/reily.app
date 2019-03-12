@@ -1,4 +1,4 @@
-import { SiteMap } from 'navi'
+import { SiteMap } from "navi";
 
 /**
  * Returns an object mapping the URL of each of the site's pages to it's `title`
@@ -9,15 +9,15 @@ import { SiteMap } from 'navi'
  * development, while also allowing production builds to use a prebuilt copy.
  */
 function getTagsFromSiteMap(siteMap: SiteMap): string[] {
-  let routes = Object.values(siteMap.routes)
+  let routes = Object.values(siteMap.routes);
   return Array.from(
     new Set(
       [].concat.apply(
         [],
-        routes.map(route => (route.data && route.data.tags) || []),
-      ),
-    ),
-  )
+        routes.map(route => (route.data && route.data.tags) || [])
+      )
+    )
+  );
 }
 
-export default getTagsFromSiteMap
+export default getTagsFromSiteMap;

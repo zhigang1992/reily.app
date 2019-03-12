@@ -3,7 +3,7 @@ we usually prefer to have both codebases in one repo.
 
 This way, one pull request and have the complete code changes for one feature.
 
-This is especially the case with firebase as backend.
+This is especially the case when using firebase as backend.
 
 ## yarn workspace
 
@@ -24,13 +24,12 @@ But we can do better with **yarn workspace**, [here is why.](https://yarnpkg.com
 ```
 
 Unfortunately, `react-native` does not work well with mono workspace out of the box.    
-There are the following issues:
 
 ####  Unable to use `react-native link`
 
 Currently `react-native link` would look for packages in `/app/node_modules` and fail,
 because it's actually in `/node_modules`.
-Thus we can only do manual integrations.
+Thus we have do manual integrations.
 
 #### Native library search path
 
@@ -44,7 +43,7 @@ It assumes `node_modules` is located at `app/node_modules`, the same folder wher
 
 Same thing goes for header file search paths.
 
-To fix this only issue, you can:
+To fix this issue, you can:
 
 1. [patch-package](https://github.com/ds300/patch-package) all the native packages' search path.
 1. `nohoist` all native packages. (We will talk more about `nohoist` in just a bit).

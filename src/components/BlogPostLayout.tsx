@@ -1,21 +1,21 @@
-import React from 'react'
-import { Link, View, useCurrentRoute } from 'react-navi'
-import { MDXProvider } from '@mdx-js/tag'
-import siteMetadata from '../siteMetadata'
-import ArticleMeta from './ArticleMeta'
-import Bio from './Bio'
-import styles from './BlogPostLayout.module.css'
+import React from "react";
+import { Link, View, useCurrentRoute } from "react-navi";
+import { MDXProvider } from "@mdx-js/tag";
+import siteMetadata from "../siteMetadata";
+import ArticleMeta from "./ArticleMeta";
+import Bio from "./Bio";
+import styles from "./BlogPostLayout.module.css";
 
 interface BlogPostLayoutProps {
-  blogRoot: string
+  blogRoot: string;
 }
 
 function BlogPostLayout({ blogRoot }: BlogPostLayoutProps) {
-  let { title, data, url } = useCurrentRoute()
+  let { title, data, url } = useCurrentRoute();
 
   return (
     <View>
-      {({ MDXComponent, readingTime }) =>
+      {({ MDXComponent, readingTime }) => (
         // The content for posts is an MDX component, so we'll need
         // to use <MDXProvider> to ensure that links are rendered
         // with <Link>, and thus use pushState.
@@ -35,10 +35,23 @@ function BlogPostLayout({ blogRoot }: BlogPostLayoutProps) {
               a: Link,
               wrapper: ({ children }) => (
                 <div className={styles.content}>{children}</div>
-              ),
-            }}>
+              )
+            }}
+          >
             <MDXComponent />
           </MDXProvider>
+          <a
+            className={styles.EditOnGithub}
+            href={
+              "https://github.com/zhigang1992/reily.app/blob/master/src/routes/posts/" +
+              data.pathname
+                .replace(/^.\//, "")
+                .replace(/post\.ts$/, "document.mdx")
+            }
+            target="_blank"
+          >
+            Edit on GitHub
+          </a>
           <footer className={styles.footer}>
             <h3 className={styles.title}>
               <Link href={blogRoot}>{siteMetadata.title}</Link>
@@ -48,7 +61,8 @@ function BlogPostLayout({ blogRoot }: BlogPostLayoutProps) {
               {data.previousDetails && (
                 <Link
                   className={styles.previous}
-                  href={data.previousDetails.href}>
+                  href={data.previousDetails.href}
+                >
                   ← {data.previousDetails.title}
                 </Link>
               )}
@@ -60,9 +74,9 @@ function BlogPostLayout({ blogRoot }: BlogPostLayoutProps) {
             </section>
           </footer>
         </article>
-      }
+      )}
     </View>
-  )
+  );
 }
 
-export default BlogPostLayout
+export default BlogPostLayout;

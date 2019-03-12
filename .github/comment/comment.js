@@ -9,7 +9,7 @@ const event = JSON.parse(
 );
 
 if (event.action !== "opened") {
-  console.log('Event:' + event.action)
+  console.log("Event:" + event.action);
   process.exit(78);
 }
 
@@ -27,7 +27,7 @@ const options = {
   path: `/repos/${GITHUB_REPOSITORY}/issues/${event.number}/comments`,
   method: "POST",
   headers: {
-    'User-Agent': 'curl',
+    "User-Agent": "curl",
     Authorization: `token ${GITHUB_TOKEN}`,
     Accept:
       "application/vnd.github.v3+json; application/vnd.github.antiope-preview+json"
@@ -47,9 +47,13 @@ const req = https.request(options, res => {
 });
 
 req.on("error", error => {
-    console.error(error);
-    process.exit(1);
+  console.error(error);
+  process.exit(1);
 });
 
-req.write(JSON.stringify({body: `Preview this PR at [${surge}](${surge}), check it out!`}));
+req.write(
+  JSON.stringify({
+    body: `Preview this PR at [${surge}](${surge}), check it out!`
+  })
+);
 req.end();

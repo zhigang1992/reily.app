@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Merriweather:400,400i,700,700i,900|Montserrat:900');
+@import url("https://fonts.googleapis.com/css?family=Merriweather:400,400i,700,700i,900|Montserrat:900");
 
 :root {
   --primary-color: #d23669;
@@ -16,7 +16,7 @@
 
 :global body {
   font-kerning: normal;
-  font-family: 'Merriweather','Georgia',serif;
+  font-family: "Merriweather", "Georgia", serif;
   font-feature-settings: "kern", "liga", "clig", "calt";
   font-weight: 400;
   margin: 0;
@@ -26,7 +26,8 @@
 
 :global(pre),
 :global(code) {
-  font-family: Consolas, Menlo, Monaco, source-code-pro, "Courier New", monospace;
+  font-family: Consolas, Menlo, Monaco, source-code-pro, "Courier New",
+    monospace;
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -49,7 +50,7 @@
   line-height: 1.75rem;
   color: inherit;
   font-style: italic;
-  border-left: 0.32813rem solid hsla(0,0%,0%,0.9);
+  border-left: 0.32813rem solid hsla(0, 0%, 0%, 0.9);
   border-left-color: inherit;
   opacity: 0.8;
 }

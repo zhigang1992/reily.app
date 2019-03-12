@@ -1,12 +1,12 @@
-import React from 'react'
-import ArticleSummary from './ArticleSummary'
-import styles from './TagPage.module.css'
-import { Route } from 'navi'
+import React from "react";
+import ArticleSummary from "./ArticleSummary";
+import styles from "./TagPage.module.css";
+import { Route } from "navi";
 
 interface TagPageProps {
-  blogRoot: string
-  name: string
-  routes: Route[]
+  blogRoot: string;
+  name: string;
+  routes: Route[];
 }
 
 function TagPage({ blogRoot, name, routes }: TagPageProps) {
@@ -21,7 +21,7 @@ function TagPage({ blogRoot, name, routes }: TagPageProps) {
         ))}
       </ul>
     </div>
-  )
+  );
 }
 
-export default TagPage
+export default TagPage;

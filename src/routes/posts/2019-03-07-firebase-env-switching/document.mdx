@@ -1,0 +1,224 @@
+## Why do we need multiple envs
+
+> To avoid surprises and unintentional changes on production.
+
+With general project with firebase, there are 3 envs:
+
+- **Development**: Local and integration testing for Dev.
+- **Staging**: Replica of a production environment for QA testing.
+- **Production**: Production server!
+
+Here is how we use these envs during our development flow 
+
+- Staring working on a new feature, deploy to development server whenever we need to test integration on cloud functions and etc. 
+- Then after we complete the feature, we created a PR on GitHub. 
+- When PR is reviewed and merged, code will be automatically deploy to Staging env. 
+- Then after it's tested on Staging server, we create a Release on GitHub which triggers GitHub action and deploy to Production.
+
+### Why do we need multiple firebase project
+
+Firebase projects actually do support multiple apps, but the supports are limited.
+
+| Service | Multiple Instance Support |
+|:----|----:|
+|Realtime database| Supported |
+|Storage| Supported |
+|Hosting| Supported |
+|Authentication| Not Supported |
+|FireStore| Not Supported |
+|Cloud Function| Not Supported |
+|Analytics| Not Supported |
+|...| Not Supported |
+
+Most features/services does not support multiple instance, even for ones that do, switching instance is hard and error prone.
+
+And fortunately, [firebase-tools](https://github.com/firebase/firebase-tools) does support multiple firebase projects via `firebase use`.
+
+# How
+
+## Setup
+
+- Create Dev project in [console.firebase.google.com](https://console.firebase.google.com)
+- Enable appropriate services in console (e.g. FireStore, Storage, Functions, Hosting. It need to be enabled first before deploy.)
+- Setup local folder with `firebase init`
+- Create projects for other envs, Staging and Production.
+- Enable appropriate services in console for other envs (Unfortunately, we can not automate this process yet).
+- Add to local folder with `firebase use --add`
+- Deploy to these envs.
+
+## Cloud Functions
+
+Cloud functions has env setup covered on its own, so you don't need to worry about it inside your code.
+ 
+But it might need different env variable.
+
+For example, when integrating with stripe, we usually use test tokes for dev, and optionally staging.
+
+Which we can use https://firebase.google.com/docs/functions/config-env
+
+```bash
+firebase use dev
+firebase functions:config:set strip.key="THE TEST KEY"
+firebase use staging
+firebase functions:config:set strip.key="THE PRODUCTION KEY"
+firebase use production
+firebase functions:config:set strip.key="THE PRODUCTION KEY"
+``` 
+
+For other identical envs, you can use simple clone. It will copy over all the configs from dev to staging.
+
+```bash
+firebase use staging
+firebase functions:config:clone --from dev
+```
+
+## Native app
+
+For iOS:
+
+- There are different `GoogleService-Info.plist` for each env.
+- And `Info.plist` because it needs `REVERSED_CLIENT_ID` from `GoogleService-Info.plist` 
+
+For android:
+
+- there is `google-services.json`.
+- (Optional) `build.gradle` or `gradle.property`. 
+
+We have some options on how we can approach multiple envs setup:
+
+#### Using multiple targets for iOS
+
+Duplicate `app` target to create `app-staging` and `app-prod`, then add there corresponding files to their target.
+
+This approach does not require any file swapping, but multiple targets introduces other problems:
+
+1. `react-native link` will only link with the first target. And if we do manually linking we often forget staging and prod envs.
+1. Native code will need to be added to all the targets, even though with react-native we hardly need to write any native code.
+
+#### Using different Bundle ID
+
+If we use different bundle ID for different envs. We can install multiple apps on one device, and not having to worry about they interfering with each other.
+
+But it also require us to config and provisioning them separately.
+
+<hr/>
+
+So in the end, we decided to use the same bundle ID with one target for iOS app, and swap out the configuration files. 
+
+[Config Files Swapping](https://gist.github.com/zhigang1992/6e28de154cd8104ef08b9264d4364ee4)
+
+Essentially, it does this:
+
+```typescript
+await run(`../node_modules/.bin/firebase use ${env}`);
+await run(
+`ln -f ./configs/${env}/GoogleService-Info.plist ../app/ios/GoogleService-Info.plist`
+);
+await run(
+`ln -f ./configs/${env}/google-services.json ../app/android/app/google-services.json`
+);
+await run(
+`ln -f ./configs/${env}/Info.plist ../app/ios/mercy/Info.plist`
+);
+```
+
+The reason why we use `ln` instead of `copy` because it will sync back changes from Xcode or Android Studio.
+
+We also need these code in `AppDelegate` to prevent different env interfering with each other:
+
+```swift
+let projectKey = "com.mercy.projectKey"
+let savedProjectID = UserDefaults.standard.string(forKey: projectKey)
+
+let projectID = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist")
+    .flatMap({ NSDictionary(contentsOfFile:$0) })
+    .flatMap({ $0["PROJECT_ID"] as? String})
+
+if savedProjectID != projectID {
+    try? Auth.auth().signOut()
+    UserDefaults.standard.set(projectID, forKey: projectKey)
+    UserDefaults.standard.synchronize()
+}
+```
+
+Above code check for two cases:
+
+1. Switch firebase env, we would signOut user because they are on different backend.
+1. firebase persist auth info in keychain, which will remain after app remove and reinstall. For us this is a feature that we do not want. So since `com.mercy.projectKey` is saved in `NSUserDefaults`, it will log us out when reinstall.
+
+## Website (With firebase Hosting)
+
+When setup Web project for firebase, we usually got following instruction from the firebase console.
+
+```html
+<script src="https://www.gstatic.com/firebasejs/5.8.6/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyD9N6fIvtG-wnjjtGGmaGgBMA56te6kiok",
+    authDomain: "mercy-b94dd.firebaseapp.com",
+    databaseURL: "https://mercy-b94dd.firebaseio.com",
+    projectId: "mercy-b94dd",
+    storageBucket: "mercy-b94dd.appspot.com",
+    messagingSenderId: "771295960232"
+  };
+  firebase.initializeApp(config);
+</script>
+```
+
+But it became a problem when we use different configs on different envs.
+
+Fortunately, firebase provide [sdk auto-configuration with reserved urls](https://firebase.google.com/docs/hosting/reserved-urls#sdk_auto-configuration)
+
+```html
+<script src="/__/firebase/init.js"></script>
+```
+
+or 
+
+```js
+fetch('/__/firebase/init.json').then(response => {
+  firebase.initializeApp(response.json());
+});
+```
+
+And it will initially the firebase SDK for us.
+
+Then for local development with create-react-app, we use [proxy](https://facebook.github.io/create-react-app/docs/proxying-api-requests-in-development)
+
+```json{3}
+{
+  ...
+  "proxy": "http://mercy-dev.firebaseapp.com",
+  ...
+}
+```
+
+## Firebase Admin Scripts
+
+Through a project's lifecycle, we often need a lot of scripts for certain tasks.
+
+For example, promoting admin, migrate database, calculating stats.
+
+If we have multiple env, this becomings harder to maintain.
+
+[Here is code](https://gist.github.com/zhigang1992/88dfa42117c9d12b5689e26451a58223)
+
+```typescript{2}
+export const currentEnv = (): Env => {
+  return process.env.DEPOLY_TO || projectsMap[execSync(`firebase use`).trim()]
+};
+```
+
+This way, by default it will use whatever we chose before with `firebase use`.
+But we still can do `DEPLOY_TO=prod ./scriptA.ts` to overwrite this behavior.
+
+# Conclusion
+
+It's not easy to do multiple envs for software project, but it's crucial for our product quality / user experiences. 
+There are definitely problems along the way, but once they are solved.
+It's really easy to work with and not warring about accidentally breaking production.
+
+We also learn a lot with deploying to multiple envs with GitHub Actions, which will be covered in a different post later.
+
+To be continued.   
