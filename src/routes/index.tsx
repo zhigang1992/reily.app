@@ -17,6 +17,7 @@ import BlogLayout from "../components/BlogLayout";
 import BlogPostLayout from "../components/BlogPostLayout";
 import siteMetadata from "../siteMetadata";
 import posts from "./posts";
+import ReactGA from "react-ga";
 
 interface AppNavContext {
   blogRoot: string;
@@ -70,6 +71,7 @@ const pagesSwitch = compose(
     })
   ),
   withView((req, context) => {
+    ReactGA.pageview(window.location.pathname);
     // Check if the current page is an index page by comparing the remaining
     // portion of the URL's pathname with the index page paths.
     let isViewingIndex = req.path === "/" || /^\/page\/\d+\/$/.test(req.path);
