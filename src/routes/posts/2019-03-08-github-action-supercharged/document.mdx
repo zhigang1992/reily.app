@@ -15,7 +15,7 @@ Let's start with code and see GitHub actions in action. 😄
 ```css
 workflow "Test on every push" {
   on = "push"
-  resolves = ["TypeCheck", "Lints", "Unit Tests", "e2e Tests"]
+  resolves = ["TypeCheck", "Lints", "Unit Tests", "E2E Tests"]
 }
 
 action "Yarn Install" {
@@ -45,7 +45,7 @@ action "Unit Tests" {
   args = "test"
 }
 
-action "e2e Tests" {
+action "E2E Tests" {
   needs = ["Yarn install"]
   uses = "docker://node:10"
   runs = "yarn"
@@ -99,7 +99,7 @@ workflow "Deploy to Production on Release" {
   resolves = ["Deploy iOS App", "Deploy Android App", "Deploy Production"]
 }
 
-action "deploy iOS App" {
+action "Deploy iOS App" {
   uses = "./.github/deployMac"
   args = "ios"
   secrets = [
@@ -107,7 +107,7 @@ action "deploy iOS App" {
   ]
 }
 
-action "deploy Android App" {
+action "Deploy Android App" {
   uses = "./.github/androidBuild"
   args = "ios"
   secrets = [
