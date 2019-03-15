@@ -5,11 +5,83 @@ import styles from './document.module.css'
     sign up <a href="https://github.com/features/actions">here</a>
 </div>
 
+
+## Examples
+
+Let's start with code and see GitHub actions in action. 😄
+
+### Mobile app with firebase
+
+```css
+workflow "Test on every push" {
+  on = "push"
+  resolves = ["TypeCheck", "Lints", "Unit Tests", "e2e Tests"]
+}
+
+action "Yarn Install" {
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "install"
+}
+
+action "TypeCheck" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "tsc"
+}
+
+action "Lints" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "tslint"
+}
+
+action "Unit Tests" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "test"
+}
+
+action "e2e Tests" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "e2e"
+}
+```
+
+This will run the tests on every push, including ones in an PR. And if something went wrong, these checks will fail on that PR.
+
+
+### This blog
+
 ## Comparing over traditional CI infrastructure.
 
-### Easier integration with GitHub
+GitHub actions has all the quality of a good CI server:
 
-### Configuration in Code lives with version control
+- Configure as code in version control
+- Flexible and scalable container execution
+
+Comparing to other CI solution like Jenkins, Circle, TravisCI, GitHub actions is also much easier to integrate with GitHub.
+
+For one, you no longer need to setup Deploy key or ssh key just to checkout the code. 
+It's also much easier to report back to GitHub with in action with `GITHUB_TOKEN`.
+
+Secondly, configure as code.
+
+You can `use` in a step:
+
+- any docker container
+- subfolder in current repo
+- any public repo on GitHub
+
+And with the community grow, there are more and more repo on GitHub that you can plug and play.
+
+If you build a useful custom action, simply by extracting into a repo. Other people would be able to use it in their code.
+
 
 ### Capabilities
 
@@ -31,14 +103,6 @@ acl:
 ### Error reporting
 
 Report to Slack / Telegram on error
-
-## Examples
-
-### mobile app workflow
-
-custom yarn dockerfile
-
-### This blog
 
 ## Issues
 
