@@ -55,6 +55,77 @@ action "e2e Tests" {
 
 This will run the tests on every push, including ones in an PR. And if something went wrong, these checks will fail on that PR.
 
+When when PR is merged
+
+```css
+workflow "Automatically deploy to staging" {
+  on = "push"
+  resolves = ["Deploy Staging"]
+}
+
+action "Is backend files changed" {
+  uses = "zhigang1992/ismodifiedaction@master"
+  args = "packages/web folder/of/myBackendProject .github/main.workflow"
+}
+
+action "Is Develop Branch" {
+  uses = "actions/bin/filter@master"
+  args = "branch develop"
+}
+
+action "Build" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "build"
+}
+
+action "Deploy Staging" {
+  needs = ["Is backend files changed", "Is Develop Branch", "Build"]
+  uses = "./.github/yarn"
+  args = "deploy staging"
+  secrets = [
+    "FIREBASE_TOKEN",
+  ]
+}
+
+```
+
+Then when it comes release to production
+
+```css
+workflow "Deploy to Production on Release" {
+  on = "release"
+  resolves = ["Deploy iOS App", "Deploy Android App", "Deploy Production"]
+}
+
+action "deploy iOS App" {
+  uses = "./.github/deployMac"
+  args = "ios"
+  secrets = [
+    "MAC_MACHINE_TOKEN",
+  ]
+}
+
+action "deploy Android App" {
+  uses = "./.github/androidBuild"
+  args = "ios"
+  secrets = [
+    "GOOGLE_PLAY_TOKEN",
+  ]
+}
+
+action "Deploy Production" {
+  needs = ["Build"]
+  uses = "./.github/yarn"
+  args = "deploy production"
+  secrets = [
+    "FIREBASE_TOKEN",
+  ]
+}
+```
+
+All we need to do now is draft a release on GitHub, and everything will be deployed automatically.
 
 ### This blog
 
