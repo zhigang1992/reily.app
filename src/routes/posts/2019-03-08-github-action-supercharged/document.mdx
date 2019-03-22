@@ -129,6 +129,14 @@ All we need to do now is draft a release on GitHub, and everything will be deplo
 
 ### This blog
 
+This blog is also powered by GitHub Action:
+
+1. It will deploy to https://reily.app when push or merge PRs to master. Which is hosted on Firebase Hosting
+1. It will deploy to https://reily_<branch_name>.surge.sh when push to none master PRs.
+1. It will add a [comment](https://github.com/zhigang1992/reily.app/pull/3#issuecomment-470367848) to PRs when created.
+
+You can find the source code [here](https://github.com/zhigang1992/reily.app/blob/master/.github/main.workflow)
+
 ## Comparing over traditional CI infrastructure.
 
 GitHub actions has all the quality of a good CI server:
