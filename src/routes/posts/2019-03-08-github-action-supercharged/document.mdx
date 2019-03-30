@@ -144,12 +144,20 @@ GitHub actions has all the quality of a good CI server:
 - Configure as code in version control
 - Flexible and scalable container execution
 
-Comparing to other CI solution like Jenkins, Circle, TravisCI, GitHub actions is also much easier to integrate with GitHub.
+### GitHub Integration
+
+Comparing to other CI solution like Jenkins, Circle, TravisCI.
+
+GitHub actions is much easier to integrate with GitHub.
 
 For one, you no longer need to setup Deploy key or ssh key just to checkout the code. 
 It's also much easier to report back to GitHub with in action with `GITHUB_TOKEN`.
 
-Secondly, configure as code.
+And also no need for a separate account/user permission system for CI.
+
+### Community backed actions
+
+`main.workflow` and all of your custom actions lives with your code base, and verson controlled.
 
 You can `use` in a step:
 
@@ -164,28 +172,65 @@ If you build a useful custom action, simply by extracting into a repo. Other peo
 
 ### Capabilities
 
-### Lack of Capabilities (Mac build instance)
+https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#runtime-environment-resources
 
-Workarounds:
+- 1 virtual CPU
+- Up to 3.75 GB of memory
+- Remote network access
+- Environment variables describing current workflow context
+- Write access to the filesystem
+- 100 GB of disk space
 
-## Useful Actions
+### Lack of Capabilities
 
-### Debug
-actions:bin/debug
+Because it's run in a linux docker container, we can't build iOS app within action (obviously)
 
-### Local Debug
+Alternatively, we can using ssh-remote to remote into a mac instance. Example: https://gist.github.com/d5c4d61b692ba8511ea6f52d54ce79c5 
 
-acl:
+## Useful Stuff
 
-### ...
+To get started with Github actions, you should check out https://github.com/actions/bin
 
-### Error reporting
+For example if you want to debug action, simply plugin `actions:bin/debug` to print out all the enviornment variables and `/github/workflow/event.json`
 
-Report to Slack / Telegram on error
+It is also a pain to push to GitHub every time to test out some script, luckily you can use [act](https://github.com/nektos/act) to debug locally.
+
+Currently, GitHub actions doesn't support error reporting, it will only so up on the PR status. So example if you have a action listening for release event. It won't show you anything if it fails.
+
+So we need to come up with our own reporting.
+
+Here is the `entrypoint.sh` for a custom action, which will report to telegram is anything went wrong during `yarn *` task.
+```bash
+#!/bin/sh -l
+
+(
+set -e
+sh -c "yarn install"
+sh -c "yarn $*"
+)
+errorCode=$?
+if [ $errorCode -ne 0 ]; then
+  echo "We have an error"
+  curl \
+   --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+   --data-urlencode "parse_mode=Markdown" \
+   --data-urlencode "text=*Error*:
+*action*:$GITHUB_WORKFLOW - $GITHUB_ACTION
+*by*:$GITHUB_ACTOR
+*in*:$GITHUB_REF" \
+   https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage
+  exit $errorCode
+fi
+```
 
 ## Issues
 
-### Cancel treated as error
-### Cancel will cancel whole workflow.
-### Can not re-run actions
+At the moment there are still some minor issues with GitHub action, for example:
+ 
+1. Cancel is treated as error in PR.
+1. Cancel one step will cancel whole workflow.
+1. Can not re-run actions
 
+But nothing deal breakers.
+
+Also it's in beta, and I'm it will get a lot before when it's publicly available. 
