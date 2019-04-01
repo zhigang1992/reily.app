@@ -1,0 +1,236 @@
+import styles from './document.module.css'
+
+<div className={styles.warning}>
+  😢 unfortunately GitHub actions is still in Limited public,
+    sign up <a href="https://github.com/features/actions">here</a>
+</div>
+
+
+## Examples
+
+Let's start with code and see GitHub actions in action. 😄
+
+### Mobile app with firebase
+
+```css
+workflow "Test on every push" {
+  on = "push"
+  resolves = ["TypeCheck", "Lints", "Unit Tests", "E2E Tests"]
+}
+
+action "Yarn Install" {
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "install"
+}
+
+action "TypeCheck" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "tsc"
+}
+
+action "Lints" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "tslint"
+}
+
+action "Unit Tests" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "test"
+}
+
+action "E2E Tests" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "e2e"
+}
+```
+
+This will run the tests on every push, including ones in an PR. And if something went wrong, these checks will fail on that PR.
+
+When when PR is merged
+
+```css
+workflow "Automatically deploy to staging" {
+  on = "push"
+  resolves = ["Deploy Staging"]
+}
+
+action "Is backend files changed" {
+  uses = "zhigang1992/ismodifiedaction@master"
+  args = "packages/web folder/of/myBackendProject .github/main.workflow"
+}
+
+action "Is Develop Branch" {
+  uses = "actions/bin/filter@master"
+  args = "branch develop"
+}
+
+action "Build" {
+  needs = ["Yarn install"]
+  uses = "docker://node:10"
+  runs = "yarn"
+  args = "build"
+}
+
+action "Deploy Staging" {
+  needs = ["Is backend files changed", "Is Develop Branch", "Build"]
+  uses = "./.github/yarn"
+  args = "deploy staging"
+  secrets = [
+    "FIREBASE_TOKEN",
+  ]
+}
+
+```
+
+Then when it comes release to production
+
+```css
+workflow "Deploy to Production on Release" {
+  on = "release"
+  resolves = ["Deploy iOS App", "Deploy Android App", "Deploy Production"]
+}
+
+action "Deploy iOS App" {
+  uses = "./.github/deployMac"
+  args = "ios"
+  secrets = [
+    "MAC_MACHINE_TOKEN",
+  ]
+}
+
+action "Deploy Android App" {
+  uses = "./.github/androidBuild"
+  args = "ios"
+  secrets = [
+    "GOOGLE_PLAY_TOKEN",
+  ]
+}
+
+action "Deploy Production" {
+  needs = ["Build"]
+  uses = "./.github/yarn"
+  args = "deploy production"
+  secrets = [
+    "FIREBASE_TOKEN",
+  ]
+}
+```
+
+All we need to do now is draft a release on GitHub, and everything will be deployed automatically.
+
+### This blog
+
+This blog is also powered by GitHub Action:
+
+1. It will deploy to https://reily.app when push or merge PRs to master. Which is hosted on Firebase Hosting
+1. It will deploy to https://reily_<branch_name>.surge.sh when push to none master PRs.
+1. It will add a [comment](https://github.com/zhigang1992/reily.app/pull/3#issuecomment-470367848) to PRs when created.
+
+You can find the source code [here](https://github.com/zhigang1992/reily.app/blob/master/.github/main.workflow)
+
+## Comparing over traditional CI infrastructure.
+
+GitHub actions has all the quality of a good CI server:
+
+- Configure as code in version control
+- Flexible and scalable container execution
+
+### GitHub Integration
+
+Comparing to other CI solution like Jenkins, Circle, TravisCI.
+
+GitHub actions is much easier to integrate with GitHub.
+
+For one, you no longer need to setup Deploy key or ssh key just to checkout the code. 
+It's also much easier to report back to GitHub with in action with `GITHUB_TOKEN`.
+
+And also no need for a separate account/user permission system for CI.
+
+### Community backed actions
+
+`main.workflow` and all of your custom actions lives with your code base, and verson controlled.
+
+You can `use` in a step:
+
+- any docker container
+- subfolder in current repo
+- any public repo on GitHub
+
+And with the community grow, there are more and more repo on GitHub that you can plug and play.
+
+If you build a useful custom action, simply by extracting into a repo. Other people would be able to use it in their code.
+
+
+### Capabilities
+
+https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#runtime-environment-resources
+
+- 1 virtual CPU
+- Up to 3.75 GB of memory
+- Remote network access
+- Environment variables describing current workflow context
+- Write access to the filesystem
+- 100 GB of disk space
+
+### Lack of Capabilities
+
+Because it's run in a linux docker container, we can't build iOS app within action (obviously)
+
+Alternatively, we can using ssh-remote to remote into a mac instance. Example: https://gist.github.com/d5c4d61b692ba8511ea6f52d54ce79c5 
+
+## Useful Stuff
+
+To get started with Github actions, you should check out https://github.com/actions/bin
+
+For example if you want to debug action, simply plugin `actions:bin/debug` to print out all the enviornment variables and `/github/workflow/event.json`
+
+It is also a pain to push to GitHub every time to test out some script, luckily you can use [act](https://github.com/nektos/act) to debug locally.
+
+Currently, GitHub actions doesn't support error reporting, it will only so up on the PR status. So example if you have a action listening for release event. It won't show you anything if it fails.
+
+So we need to come up with our own reporting.
+
+Here is the `entrypoint.sh` for a custom action, which will report to telegram is anything went wrong during `yarn *` task.
+```bash
+#!/bin/sh -l
+
+(
+set -e
+sh -c "yarn install"
+sh -c "yarn $*"
+)
+errorCode=$?
+if [ $errorCode -ne 0 ]; then
+  echo "We have an error"
+  curl \
+   --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+   --data-urlencode "parse_mode=Markdown" \
+   --data-urlencode "text=*Error*:
+*action*:$GITHUB_WORKFLOW - $GITHUB_ACTION
+*by*:$GITHUB_ACTOR
+*in*:$GITHUB_REF" \
+   https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage
+  exit $errorCode
+fi
+```
+
+## Issues
+
+At the moment there are still some minor issues with GitHub action, for example:
+ 
+1. Cancel is treated as error in PR.
+1. Cancel one step will cancel whole workflow.
+1. Can not re-run actions
+
+But nothing deal breakers.
+
+Also it's in beta, and I'm it will get a lot before when it's publicly available. 
