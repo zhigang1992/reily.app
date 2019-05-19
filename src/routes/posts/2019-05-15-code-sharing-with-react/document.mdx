@@ -1,16 +1,23 @@
-This blog is meant for best practise and lessons learnt on this subject.
+React and react native, they share a lot thing of things including methodology and implementations.
+
+But unfortunately, A web project written in React and a mobile app written in react-native, their code can not be shared directly.
+
+Obviously, since they are all javascript, you can share stuffs like models, api calls, and even state management with redux / mobx.
+
+But to share code on the UI side, you would need react-native-web.
 
 To get started from the ground up and learn the basics,
 follow [this awesome tutorial](https://dev.to/brunolemos/tutorial-100-code-sharing-between-ios-android--web-using-react-native-web-andmonorepo-4pej) by [Bruno Lemos](https://github.com/brunolemos).
 
-# What we done differently
+In this blog, we'll talk about best practise and lessons learnt on this subject.
 
 ## Customize-CRA
 
-We are using https://github.com/arackaf/customize-cra instead of manually creating `config-overrides.js`
-for better readability and maintainability.
+create-react-app works out of the box with react-web apps, but to get it working with react-native-web there are some tweaking to do.
 
-[config-overrides.js](https://github.com/brunolemos/react-native-web-monorepo/blob/master/packages/web/config-overrides.js) can be replaced by
+We uses https://github.com/arackaf/customize-cra for better readability and maintainability. 
+
+But you can also write [config-overrides.js](https://github.com/brunolemos/react-native-web-monorepo/blob/master/packages/web/config-overrides.js) by hand.
 
 ```js
 const {
@@ -33,6 +40,8 @@ module.exports = override(
   )
 );
 ```
+
+This will include babel plugin, add `../packages/components` to create-react-app's path. And also define a global variable __DEV__ which is a something that react-native uses.
 
 ## StyledComponents
 
@@ -288,9 +297,13 @@ react-navigation-fluid-transitions.js
 export const Transition = props => props.children;
 ```
 
-## Responsive iPad
+## Responsive web and iPad
 
 This is not a question related to react-native-web, but rather product.
 
-// TODO
+If you're building a mobile only web app, then you'd don't need to do anything at all.
 
+But if you're building a web app for desktop, then you'd need to do the responsive layout in react-native code.
+
+But after which you'll be getting a native iPad and android tablet version for free.
+   
