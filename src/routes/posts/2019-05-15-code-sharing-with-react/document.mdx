@@ -1,0 +1,318 @@
+React and react native, they share a lot thing of things including methodology and implementations.
+
+But unfortunately, A web project written in React and a mobile app written in react-native, their code can not be shared directly.
+
+Obviously, since they are all javascript, you can share stuffs like models, api calls, and even state management with redux / mobx.
+
+But to share code on the UI side, you would need react-native-web.
+
+To get started from the ground up and learn the basics,
+follow [this awesome tutorial](https://dev.to/brunolemos/tutorial-100-code-sharing-between-ios-android--web-using-react-native-web-andmonorepo-4pej) by [Bruno Lemos](https://github.com/brunolemos).
+
+In this blog, we'll talk about best practise and lessons learnt on this subject.
+
+## Customize-CRA
+
+create-react-app works out of the box with react-web apps, but to get it working with react-native-web there are some tweaking to do.
+
+We uses https://github.com/arackaf/customize-cra for better readability and maintainability. 
+
+But you can also write [config-overrides.js](https://github.com/brunolemos/react-native-web-monorepo/blob/master/packages/web/config-overrides.js) by hand.
+
+```js
+const {
+  override,
+  babelInclude,
+  addBabelPlugin,
+  addWebpackPlugin
+} = require("customize-cra");
+const webpack = require("webpack");
+
+const path = require("path");
+
+module.exports = override(
+  addBabelPlugin("react-native-web"),
+  babelInclude([path.resolve("src"), path.resolve("../packages/components")]),
+  addWebpackPlugin(
+    new webpack.DefinePlugin({
+      __DEV__: process.env.NODE_ENV === "development"
+    })
+  )
+);
+```
+
+This will include babel plugin, add `../packages/components` to create-react-app's path. And also define a global variable __DEV__ which is a something that react-native uses.
+
+## StyledComponents
+
+We are using [styled-components](https://www.styled-components.com/) in our projects, so to get it working with react-native-web, we need a webpack alias:
+
+```js{4,5}
+  ...
+  addWebpackAlias({
+    ...
+    'styled-components':
+      'styled-components/native/dist/styled-components.native.cjs.js',
+    ...
+  }),
+  ...
+```
+
+This way it will load `react-native` version of `styled-components` instead of react-web version.
+Without this, `styled-component` will emit `className` instead `style`. [Reference](https://github.com/styled-components/styled-components/blob/master/packages/styled-components/package.json#L8)
+
+## Custom Font and Vector Icon
+
+To get vector icon working on web, [here](https://github.com/devhubapp/devhub/blob/master/packages/components/src/libs/vector-icons/index.web.ts) is how devhub does it. 
+
+But we just put font file on css and alias the import.
+
+```js{4,5}
+  ...
+  addWebpackAlias({
+    ...
+    'react-native-vector-icons/AntDesign': 'react-native-vector-icons/dist/AntDesign.js',
+    'react-native-vector-icons/Entypo': 'react-native-vector-icons/dist/Entypo.js',
+    ...
+  }),
+  ...
+```
+
+```css
+...
+@font-face {
+  font-family: AntDesign;
+  src: url('/fonts/AntDesign.ttf') format('truetype');
+}
+@font-face {
+  font-family: Entypo;
+  src: url('/fonts/Entypo.ttf') format('truetype');
+}
+```
+  
+And also custom fonts
+
+```css
+...
+@font-face {
+  font-family: Montserrat-Black;
+  src: url('/fonts/Montserrat-Black.ttf') format('truetype');
+}
+@font-face {
+  font-family: Montserrat-BlackItalic;
+  src: url('/fonts/Montserrat-BlackItalic.ttf') format('truetype');
+}
+...
+```
+
+In our approach, `web` and `mobile` projects are two shells that provide similar functionalities. 
+
+We load the font in both shell projects and then we can have the unify behavior (code sharing) in main app.   
+
+## Lottie and LinearGradient
+
+A lot of react-native-web polyfill can be found at https://github.com/react-native-web-community
+
+For example, lottie and linear-gradient.
+
+```js{4,5}
+  ...
+  addWebpackAlias({
+    ...
+    'react-native-linear-gradient': 'react-native-web-linear-gradient',
+    'lottie-react-native': 'react-native-web-lottie',
+    ...
+  }),
+  ...
+```
+
+## Backend API and state management
+
+Both react-native and react-native-web come with `fetch` built in. So code sharing in these two department is absolutely 100%.
+
+Only thing that you might need to look out for is CORS on the web. react-native does not have this issue since it's not running in a webview.
+
+## react-native-firebase
+
+If we are using firebase, then you're in luck. Since `react-native-firebase`'s is nearly identical to the web. All you need to do is 
+
+```js{4}
+  ...
+  addWebpackAlias({
+    ...
+    'react-native-firebase': 'firebase',
+    ...
+  }),
+  ...
+```
+
+If you are using https://firebase.google.com/docs/hosting/reserved-urls to load firebase in the html, you can do
+
+```js
+  ...
+  addWebpackExternals({
+    'react-native-firebase': 'firebase',
+  }),
+  ...
+```
+
+Then all the imports from 'react-native-firebase' will just use global firebase that is loaded in the html.
+
+## Routes
+
+This one is a bit tricky, current navigation standard in react-native is `react-navigation`. But it only has very limited [web support](https://reactnavigation.org/docs/en/web-support.html).
+
+But luckily, react-native-web works with any navigation library on the web. [react-router](https://reacttraining.com/react-router/web) for example.
+
+So we need 
+
+`router.tsx` 
+```typescript
+const OnboardingFlow = createStackNavigator(
+  { LoginWithPhone, VerifySMSCode },
+  { initialRouteName: 'LoginWithPhone', headerMode: 'none' }
+);
+
+const HomeFlow = createStackNavigator(
+  { HomePage, ProfilePage },
+  { initialRouteName: 'HomePage', headerMode: 'none' }
+);
+
+const Root = createSwitchNavigator(
+  { OnboardingFlow, HomeFlow },
+  { initialRouteName: 'HomeFlow' }
+);
+
+export default createAppContainer(Root);
+
+export function useUnifiedNavigation(): {
+  navigation: NavigationScreenProp<NavigationRoute>;
+  router: RouteComponentProps<any>;
+} {
+  const navigation = useNavigation();
+  return {
+    navigation,
+    router: null as any,
+  };
+}
+
+```
+
+and `router.web.tsx`.
+```typescript
+const Routes = () => {
+  return (
+    <Router>
+      <Route path="/" exact component={Dispatcher} />
+      <Route path="/onboarding/" component={LoginWithPhone} />
+      <Route path="/onboarding/sms" component={VerifySMSCode} />
+      <Route path="/profile/" component={ProfilePage} />
+      <Route path="/home/" component={HomePage} />
+    </Router>
+  );
+};
+export default Routes;
+
+export function useUnifiedNavigation(): {
+  navigation: NavigationScreenProp<NavigationRoute>;
+  router: RouteComponentProps<any>;
+} {
+  const router = useReactRouter();
+  return {
+    router,
+    navigation: null as any,
+  };
+}
+```
+
+Then in app logic
+
+```javascript
+  const { navigation, router } = useUnifiedNavigation();
+  
+  return (
+    <Button onPress={() => {
+      if (navigation != null) {
+        navigation.navigate('HomeFlow');
+      } else {
+        router.history.push('/home/');
+      }
+    }} />
+  )
+```
+
+This does come with a price:
+
+- There is no push animation on the web.
+- There is no navigation bar on the web, we have to either draw it ourselves or polyfill it.
+
+## async-storage
+
+AsyncStorage was previously in react-native core, but then split out to https://github.com/react-native-community/react-native-async-storage
+
+So to use it in react-native-web
+
+```js{4, 5}
+  ...
+  addWebpackAlias({
+    ...
+    '@react-native-community/async-storage':
+      'react-native-web/dist/exports/AsyncStorage/index.js',
+    ...
+  }),
+  ...
+```
+
+There are more and more component being removed from react-native core and into their own package,
+ this here is a rule of thumb to make it work with react-native-web if it doesn't already.
+
+## Animated, react-navigation-fluid-transitions
+
+We can use all the Animated functionalities in react-native-web (without `useNativeDriver` since it doesn't make any sense on web)
+
+We can't use react-native-reanimated on the web yet, but there are other options like https://www.react-spring.io/.
+
+For page transition animations, we can use react-navigation-fluid-transitions on the mobile side.
+
+But since react navigation doesn't work on web, react-navigation-fluid-transitions doesn't work there.
+
+So for web we just jump to next page directly.
+
+But since we are using react-navigation-fluid-transitions for mobile, we need to shim their classes.
+
+```js{4,5, 6}
+  ...
+  addWebpackAlias({
+    ...
+    'react-navigation-fluid-transitions': path.resolve(
+      './vendor/react-navigation-fluid-transitions.js'
+    ),
+    ...
+  }),
+  ...
+```
+
+react-navigation-fluid-transitions.js
+```js
+export const Transition = props => props.children;
+```
+
+## Responsive web and iPad
+
+This is not a question related to react-native-web, but rather product.
+
+If you're building a mobile only web app, then you'd don't need to do anything at all.
+
+But if you're building a web app for desktop, then you'd need to do the responsive layout in react-native code.
+
+But after which you'll be getting a native iPad and android tablet version for free.
+   
+# Summary
+
+## Expo adding web support
+
+https://blog.expo.io/expo-cli-and-sdk-web-support-beta-d0c588221375
+
+## Twitter using react-native-web
+
+react-native-web is ready for its prime time. :D
